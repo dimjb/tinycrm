@@ -8,7 +8,7 @@ namespace TinyCrm
             {
                   Console.WriteLine(IsAdult(12));
                   Console.WriteLine(IsValidAfm("123d56789"));
-                  Console.WriteLine(IsValidEmail("asd@test.com"));
+                  Console.WriteLine(IsValidEmail("asd@test.gr"));
             }
 
             public static bool IsAdult(int age)
