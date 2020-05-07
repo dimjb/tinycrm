@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TinyCrm.CrmDbContext;
+using TinyCrm.Models;
+using TinyCrm.Options;
+using TinyCrm.Services;
 
 namespace TinyCrm
 {
@@ -9,80 +13,59 @@ namespace TinyCrm
       {
             static void Main(string[] args)
             {
+                  var customerOpts = new CustomerOptions
+                  {
+                        CreatedFrom = new DateTime(2020, 5, 1),
+                        CreatedTo = new DateTime(2020, 5, 3)
+                  };
+
+                  var productOpts = new ProductOptions
+                  {
+                        PriceFrom = 20,
+                        PriceTo = 60,
+                        Categories = new List<string>()
+                        {
+                              "games"
+                        }
+                  };
+
                   try
                   {
-                        var products = GetProductsFromCsv("C:\\data.csv");
-                        var orderProducts = products.OrderBy(n => new Random().Next()).Take(10).ToList();
+                        var customers = SearchCustomers(customerOpts);
 
-                        var orderList = new List<Order>();
-
-                        var order1 = new Order
+                        if (customers.Any())
                         {
-                              OrderId = Guid.NewGuid().ToString(),
-                              DeliveryAddress = "Test Addr 1",
-                              TotalAmount = orderProducts.Sum(p => p.Price),
-                              Products = orderProducts
-                        };
-                        orderList.Add(order1);
-
-                        var customer1 = new Customer("123456789")
-                        {
-                              Orders = orderList
-                        };
-                        customer1.CalculateTotalGross();
-
-                        orderList.Clear();
-
-                        orderProducts = products.OrderBy(n => new Random().Next()).Take(10).ToList();
-
-                        var order2 = new Order
-                        {
-                              OrderId = Guid.NewGuid().ToString(),
-                              DeliveryAddress = "Test Addr 2",
-                              TotalAmount = orderProducts.Sum(p => p.Price),
-                              Products = orderProducts
-                        };
-                        orderList.Add(order2);
-
-                        var customer2 = new Customer("987654321")
-                        {
-                              Orders = orderList
-                        };
-                        customer2.CalculateTotalGross();
-
-                        var customers = new List<Customer>
-                        {
-                              customer1,
-                              customer2
-                        };
-
-                        var orders = new List<Order>
-                        {
-                              order1,
-                              order2
-                        };
-
-                        var mostValuableCustomer = customers.OrderByDescending(c => c.TotalGross).FirstOrDefault();
-
-                        Console.WriteLine
-                              ($"Most valuable customer VAT number: {mostValuableCustomer.VatNumber} | Total Gross: {mostValuableCustomer.TotalGross}");
-
-                        var soldProducts = new List<Product>();
-                        foreach (Order o in orders)
-                        {
-                              foreach (Product p in o.Products) soldProducts.Add(p);
+                              Console.WriteLine("===Customers===");
+                              foreach (Customer c in customers)
+                              {
+                                    Console.WriteLine($"| {c.CustomerId} | {c.VatNumber} | {c.FirstName} | {c.LastName} | {c.Created} |");
+                              }
                         }
-
-                        var mostSoldProducts = soldProducts.GroupBy(p => new { p.ProductId, p.Name })
-                              .Select(p => new { p.Key.ProductId, p.Key.Name, Sold = p.Count() })
-                              .OrderByDescending(o => o.Sold)
-                              .Take(5)
-                              .ToList();
-
-                        Console.WriteLine("5 Most Sold Products:");
-                        foreach (var p in mostSoldProducts)
+                        else
                         {
-                              Console.WriteLine($"ProductID: {p.ProductId} | Name: {p.Name} | Sold: {p.Sold}");
+                              Console.WriteLine("Nothing Found!");
+                        }
+                  }
+                  catch (Exception ex)
+                  {
+                        Console.WriteLine(ex.Message);
+                  }
+
+                  try
+                  {
+                        var products = SearchProducts(productOpts);
+
+                        if (products.Any())
+                        {
+                              Console.WriteLine("===Products===");
+                              foreach (Product p in products)
+                              {
+                                    Console.WriteLine($"| {p.ProductId} | {p.Name} | {p.ProductCategory} | {p.Price} |");
+                              }
+                        }
+                        else
+                        {
+                              Console.WriteLine("Nothing Found!");
                         }
                   }
                   catch (Exception ex)
@@ -91,6 +74,84 @@ namespace TinyCrm
                   }
             }
 
+            public static IEnumerable<Customer> SearchCustomers(CustomerOptions customerOptions)
+            {
+                  if (customerOptions.CreatedFrom != null &&
+                        customerOptions.CreatedTo != null &&
+                        customerOptions.CreatedFrom > customerOptions.CreatedTo)
+                  {
+                        throw new Exception("CreatedFrom cannot be later than CreatedTo");
+                  }
+
+                  using (var dbContext = new TinyCrmDbContext())
+                  {
+                        var query = dbContext.Set<Customer>();
+
+                        if (customerOptions.CustomerId != null)
+                        {
+                              return query.Where(c => c.CustomerId == customerOptions.CustomerId).ToList();
+                        }
+
+                        if (customerOptions.VatNumber != null)
+                        {
+                              return query.Where(c => c.VatNumber == customerOptions.VatNumber).ToList();
+                        }
+
+                        if (customerOptions.CreatedFrom != null && customerOptions.CreatedTo != null)
+                        {
+                              return query.Where(
+                                    c => c.Created >= customerOptions.CreatedFrom && c.Created <= customerOptions.CreatedTo ||
+                                    c.FirstName.Contains(customerOptions.FirstName) || c.LastName.Contains(customerOptions.LastName))
+                                    .Take(500)
+                                    .ToList();
+                        }
+
+                        return query.Where(c => c.FirstName.Contains(customerOptions.FirstName) || c.LastName.Contains(customerOptions.LastName))
+                                                .Take(500)
+                                                .ToList();
+                  }
+            }
+            public static IEnumerable<Product> SearchProducts(ProductOptions productOptions)
+            {
+                  if (productOptions.PriceFrom != null &&
+                        productOptions.PriceTo != null &&
+                        productOptions.PriceFrom > productOptions.PriceTo)
+                  {
+                        throw new Exception("PriceFrom cannot be greater than PriceTo");
+                  }
+
+                  using (var dbContext = new TinyCrmDbContext())
+                  {
+                        var query = dbContext.Set<Product>();
+
+                        if (productOptions.ProductId != null)
+                        {
+                              return query.Where(p => p.ProductId == productOptions.ProductId).ToList();
+                        }
+
+                        if (productOptions.Categories != null &&
+                        productOptions.Categories.Any() &&
+                        productOptions.PriceFrom != null &&
+                        productOptions.PriceTo != null)
+                        {
+                              return query.Where(p => p.Price >= productOptions.PriceFrom && p.Price <= productOptions.PriceTo &&
+                                                                       productOptions.Categories.Contains(p.ProductCategory))
+                                                       .Take(500)
+                                                       .ToList();
+                        }
+
+                        if (productOptions.Categories != null && productOptions.Categories.Any())
+                        {
+                              return query.Where(p => productOptions.Categories.Contains(p.ProductCategory))
+                                                      .Take(500)
+                                                      .ToList();
+                        }
+
+                        return query.Where(p => p.Price >= productOptions.PriceFrom && p.Price <= productOptions.PriceTo)
+                                                .Take(500)
+                                                .ToList();
+                  }
+            }
             public static List<Product> GetProductsFromCsv(string filePath)
             {
                   return File.ReadAllLines(filePath)
@@ -98,11 +159,10 @@ namespace TinyCrm
                    .Select(x => x.Split(';'))
                    .Select(x => new Product
                    {
-                         ProductId = x[0],
                          Name = x[1],
                          Description = x[2],
                          Price = GetRandomPrice()
-                   
+
                    })
                    .GroupBy(p => p.ProductId)
                    .Select(p => p.FirstOrDefault())

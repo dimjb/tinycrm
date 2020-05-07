@@ -2,24 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TinyCrm.CrmDbContext;
 
-namespace TinyCrm
+namespace TinyCrm.Models
 {
       public class Customer
       {
-            public string CustomerId { get; set; }
-            public DateTime Created { get; set; }
+            public int CustomerId { get; set; }
             public string Email { get; set; }
             public string FirstName { get; set; }
             public  string LastName { get; set; }
-            public string VatNumber { get; private set; }
+            public string Address { get; set; }
+            public string VatNumber { get; set; }
             public string Phone { get; set; }
+            public decimal TotalGross { get; set; }
+            public DateTime Created { get; set; }
+            public DateTime Dob { get; set; }
             public bool IsActive { get; set; }
-            public int Age { get; set; }
-            public decimal TotalGross { get; private set; }
-            public IEnumerable<Order> Orders { get; set; }
+            //public List<Order> Orders { get; set; }
 
-            public Customer(string vatNumber)
+            /*public Customer(string vatNumber)
             {
                   if (!IsValidVatNumber(vatNumber)) throw new Exception("Invalid VAT number");
 
@@ -67,12 +69,12 @@ namespace TinyCrm
             public void SetPhone(string phone)
             {
                   Phone = phone;
-            }
+            }*/
 
-            public bool IsAdult()
+            /*public bool IsAdult()
             {
                   return Age >= 18 && Age <= 110;
-            }
+            }*/
       }
 }
 
