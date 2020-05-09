@@ -29,6 +29,18 @@ namespace TinyCrm.CrmDbContext
                        .ToTable("Product");
 
                   modelBuilder
+                       .Entity<Order>()
+                       .ToTable("Order");
+
+                  modelBuilder
+                       .Entity<OrderProduct>()
+                       .ToTable("OrderProduct");
+
+                  modelBuilder
+                       .Entity<OrderProduct>()
+                       .HasKey(op => new { op.ProductId, op.OrderId });
+
+                  modelBuilder
                         .Entity<Customer>()
                         .HasData(
                         new Customer
@@ -56,17 +68,6 @@ namespace TinyCrm.CrmDbContext
                               Created = DateTime.Now
                         }
                    );
-
-                  modelBuilder
-                        .Entity<Product>()
-                        .HasData(
-                        new Product { ProductId = 1, ProductCategory = "games", Name = "TestProd1", Price = 20.0m },
-                        new Product { ProductId = 2, ProductCategory = "games", Name = "TestProd2", Price = 40.0m },
-                        new Product { ProductId = 3, ProductCategory = "technology", Name = "TestProd3", Price = 150.0m },
-                        new Product { ProductId = 4, ProductCategory = "software", Name = "TestProd4", Price = 60.0m },
-                        new Product { ProductId = 5, ProductCategory = "gadgets", Name = "TestProd5", Price = 45.0m },
-                        new Product { ProductId = 6, ProductCategory = "hardware", Name = "TestProd6", Price = 100.0m }
-                        );
             }
       }
 }

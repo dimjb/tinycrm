@@ -13,144 +13,155 @@ namespace TinyCrm
       {
             static void Main(string[] args)
             {
+                  var dbContext = new TinyCrmDbContext();
+
+                  /*var productsSeed = GetProductsFromCsv("C:\\data.txt");
+                  foreach (Product p in productsSeed)
+                  {
+                        dbContext.Add(p);
+                  }
+                  dbContext.SaveChanges();*/
+
                   var customerOpts = new CustomerOptions
                   {
-                        CreatedFrom = new DateTime(2020, 5, 1),
-                        CreatedTo = new DateTime(2020, 5, 3)
+                        FirstName = "cust2",
+                         CreatedFrom = new DateTime(2020,5,3),
+                         CreatedTo = new DateTime(2020,5,10)
                   };
 
-                  var productOpts = new ProductOptions
+                 // var customer = SearchCustomers(customerOpts, dbContext).SingleOrDefault();
+
+                  var customers = SearchCustomers(customerOpts, dbContext).ToList();
+
+                  if (customers.Any())
                   {
-                        PriceFrom = 20,
-                        PriceTo = 60,
-                        Categories = new List<string>()
+                        Console.WriteLine("===Customers===");
+                        foreach (Customer c in customers)
                         {
-                              "games"
+                              Console.WriteLine($"| {c.CustomerId} | {c.VatNumber} | {c.FirstName} | {c.LastName} | {c.Created} |");
+                        }
+                  }
+                  else
+                  {
+                        Console.WriteLine("Nothing Found!");
+                  }
+                  /*var productOpts = new ProductOptions
+                  {
+                        Categories = new List<ProductCategory>()
+                        {
+                              ProductCategory.Headphones
                         }
                   };
 
-                  try
-                  {
-                        var customers = SearchCustomers(customerOpts);
+                  var products = SearchProducts(productOpts, dbContext).ToList();
 
-                        if (customers.Any())
+                  var order = new Order()
+                  {
+                        DeliveryAddress = "Unknown 123, 00000"
+                  };
+
+                  if (products.Any())
+                  {
+                        foreach (Product p in products)
                         {
-                              Console.WriteLine("===Customers===");
-                              foreach (Customer c in customers)
-                              {
-                                    Console.WriteLine($"| {c.CustomerId} | {c.VatNumber} | {c.FirstName} | {c.LastName} | {c.Created} |");
-                              }
-                        }
-                        else
-                        {
-                              Console.WriteLine("Nothing Found!");
+                              order.OrderProducts.Add(
+                                    new OrderProduct()
+                                    {
+                                          Product = p
+                                    });
                         }
                   }
-                  catch (Exception ex)
+                  else
                   {
-                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("Nothing Found!");
                   }
 
-                  try
+                  if (customer != null)
                   {
-                        var products = SearchProducts(productOpts);
+                        customer.Orders.Add(order);
+                        dbContext.SaveChanges();
+                  }*/
 
-                        if (products.Any())
-                        {
-                              Console.WriteLine("===Products===");
-                              foreach (Product p in products)
-                              {
-                                    Console.WriteLine($"| {p.ProductId} | {p.Name} | {p.ProductCategory} | {p.Price} |");
-                              }
-                        }
-                        else
-                        {
-                              Console.WriteLine("Nothing Found!");
-                        }
-                  }
-                  catch (Exception ex)
-                  {
-                        Console.WriteLine(ex.Message);
-                  }
+                  dbContext.Dispose();
             }
 
-            public static IEnumerable<Customer> SearchCustomers(CustomerOptions customerOptions)
+            public static IQueryable<Customer> SearchCustomers(CustomerOptions customerOptions, TinyCrmDbContext dbContext)
             {
                   if (customerOptions.CreatedFrom != null &&
                         customerOptions.CreatedTo != null &&
                         customerOptions.CreatedFrom > customerOptions.CreatedTo)
                   {
-                        throw new Exception("CreatedFrom cannot be later than CreatedTo");
+                        return null;
                   }
 
-                  using (var dbContext = new TinyCrmDbContext())
+                  var query = dbContext.Set<Customer>().AsQueryable();
+
+                  if (customerOptions.CustomerId != null)
                   {
-                        var query = dbContext.Set<Customer>();
-
-                        if (customerOptions.CustomerId != null)
-                        {
-                              return query.Where(c => c.CustomerId == customerOptions.CustomerId).ToList();
-                        }
-
-                        if (customerOptions.VatNumber != null)
-                        {
-                              return query.Where(c => c.VatNumber == customerOptions.VatNumber).ToList();
-                        }
-
-                        if (customerOptions.CreatedFrom != null && customerOptions.CreatedTo != null)
-                        {
-                              return query.Where(
-                                    c => c.Created >= customerOptions.CreatedFrom && c.Created <= customerOptions.CreatedTo ||
-                                    c.FirstName.Contains(customerOptions.FirstName) || c.LastName.Contains(customerOptions.LastName))
-                                    .Take(500)
-                                    .ToList();
-                        }
-
-                        return query.Where(c => c.FirstName.Contains(customerOptions.FirstName) || c.LastName.Contains(customerOptions.LastName))
-                                                .Take(500)
-                                                .ToList();
+                        query = query.Where(c => c.CustomerId == customerOptions.CustomerId);
                   }
+
+                  if (customerOptions.VatNumber != null)
+                  {
+                        query = query.Where(c => c.VatNumber == customerOptions.VatNumber);
+                  }
+
+                  if (customerOptions.CreatedFrom != null)
+                  {
+                        query = query.Where(c => c.Created >= customerOptions.CreatedFrom);
+                  }
+
+                  if (customerOptions.CreatedTo != null)
+                  {
+                        query = query.Where(c => c.Created <= customerOptions.CreatedTo);
+                  }
+
+                  if (!String.IsNullOrWhiteSpace(customerOptions.FirstName))
+                  {
+                        query = query.Where(c => c.FirstName.Contains(customerOptions.FirstName));
+                  }
+
+                  if (!String.IsNullOrWhiteSpace(customerOptions.LastName))
+                  {
+                        query = query.Where(c => c.LastName.Contains(customerOptions.LastName));
+                  }
+
+                  query = query.Take(500);
+                  return query;
             }
-            public static IEnumerable<Product> SearchProducts(ProductOptions productOptions)
+            public static IQueryable<Product> SearchProducts(ProductOptions productOptions, TinyCrmDbContext dbContext)
             {
                   if (productOptions.PriceFrom != null &&
                         productOptions.PriceTo != null &&
                         productOptions.PriceFrom > productOptions.PriceTo)
                   {
-                        throw new Exception("PriceFrom cannot be greater than PriceTo");
+                        return null;
                   }
 
-                  using (var dbContext = new TinyCrmDbContext())
+                  var query = dbContext.Set<Product>().AsQueryable();
+
+                  if (productOptions.ProductId != null)
                   {
-                        var query = dbContext.Set<Product>();
-
-                        if (productOptions.ProductId != null)
-                        {
-                              return query.Where(p => p.ProductId == productOptions.ProductId).ToList();
-                        }
-
-                        if (productOptions.Categories != null &&
-                        productOptions.Categories.Any() &&
-                        productOptions.PriceFrom != null &&
-                        productOptions.PriceTo != null)
-                        {
-                              return query.Where(p => p.Price >= productOptions.PriceFrom && p.Price <= productOptions.PriceTo &&
-                                                                       productOptions.Categories.Contains(p.ProductCategory))
-                                                       .Take(500)
-                                                       .ToList();
-                        }
-
-                        if (productOptions.Categories != null && productOptions.Categories.Any())
-                        {
-                              return query.Where(p => productOptions.Categories.Contains(p.ProductCategory))
-                                                      .Take(500)
-                                                      .ToList();
-                        }
-
-                        return query.Where(p => p.Price >= productOptions.PriceFrom && p.Price <= productOptions.PriceTo)
-                                                .Take(500)
-                                                .ToList();
+                        query = query.Where(p => p.ProductId == productOptions.ProductId);
                   }
+
+                  if (productOptions.Categories != null && productOptions.Categories.Any())
+                  {
+                        query = query.Where(p => productOptions.Categories.Contains(p.Category));
+                  }
+
+                  if (productOptions.PriceFrom != null)
+                  {
+                        query = query.Where(p => p.Price >= productOptions.PriceFrom);
+                  }
+
+                  if (productOptions.PriceTo != null)
+                  {
+                        query = query.Where(p => p.Price <= productOptions.PriceTo);
+                  }
+
+                  query = query.Take(500);
+                  return query;
             }
             public static List<Product> GetProductsFromCsv(string filePath)
             {
@@ -159,10 +170,11 @@ namespace TinyCrm
                    .Select(x => x.Split(';'))
                    .Select(x => new Product
                    {
+                         ProductId = x[0],
                          Name = x[1],
-                         Description = x[2],
+                         Category = (ProductCategory)int.Parse(x[2]),
+                         Description = x[3],
                          Price = GetRandomPrice()
-
                    })
                    .GroupBy(p => p.ProductId)
                    .Select(p => p.FirstOrDefault())

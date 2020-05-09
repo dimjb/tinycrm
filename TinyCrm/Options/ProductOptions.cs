@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TinyCrm.Models;
 
 namespace TinyCrm.Options
 {
       public class ProductOptions
       {
-            public int? ProductId { get; set; } = null; //used nullable just to be verbose about the absence of value
+            public string ProductId { get; set; }
             public decimal? PriceFrom { get; set; } = null;
             public decimal? PriceTo { get; set; } = null;
-            public IEnumerable<string> Categories { get; set; }
+            public IEnumerable<ProductCategory> Categories { get; set; }
       }
 }

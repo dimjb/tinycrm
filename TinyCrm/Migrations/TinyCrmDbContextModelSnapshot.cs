@@ -19,6 +19,29 @@ namespace TinyCrm.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("TinyCrm.CrmDbContext.Order", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DeliveryAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("OrderId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Order");
+                });
+
             modelBuilder.Entity("TinyCrm.Models.Customer", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -29,11 +52,8 @@ namespace TinyCrm.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("Dob")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
@@ -64,10 +84,9 @@ namespace TinyCrm.Migrations
                         new
                         {
                             CustomerId = 1,
-                            Created = new DateTime(2020, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Dob = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Created = new DateTimeOffset(new DateTime(2020, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 3, 0, 0, 0)),
                             FirstName = "TestCust1Name",
-                            IsActive = false,
+                            IsActive = true,
                             LastName = "TestCust1LastName",
                             TotalGross = 0m,
                             VatNumber = "123456789"
@@ -75,10 +94,9 @@ namespace TinyCrm.Migrations
                         new
                         {
                             CustomerId = 2,
-                            Created = new DateTime(2020, 5, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Dob = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Created = new DateTimeOffset(new DateTime(2020, 5, 3, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 3, 0, 0, 0)),
                             FirstName = "TestCust2Name",
-                            IsActive = false,
+                            IsActive = true,
                             LastName = "TestCust2LastName",
                             TotalGross = 0m,
                             VatNumber = "987654321"
@@ -86,22 +104,37 @@ namespace TinyCrm.Migrations
                         new
                         {
                             CustomerId = 3,
-                            Created = new DateTime(2020, 5, 6, 22, 51, 32, 696, DateTimeKind.Local).AddTicks(2986),
-                            Dob = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Created = new DateTimeOffset(new DateTime(2020, 5, 9, 2, 51, 19, 629, DateTimeKind.Unspecified).AddTicks(9086), new TimeSpan(0, 3, 0, 0, 0)),
                             FirstName = "TestCust3Name",
-                            IsActive = false,
+                            IsActive = true,
                             LastName = "TestCust3LastName",
                             TotalGross = 0m,
                             VatNumber = "123654789"
                         });
                 });
 
+            modelBuilder.Entity("TinyCrm.Models.OrderProduct", b =>
+                {
+                    b.Property<string>("ProductId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "OrderId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderProduct");
+                });
+
             modelBuilder.Entity("TinyCrm.Models.Product", b =>
                 {
-                    b.Property<int>("ProductId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<string>("ProductId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -112,56 +145,31 @@ namespace TinyCrm.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("ProductCategory")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("ProductId");
 
                     b.ToTable("Product");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            ProductId = 1,
-                            Name = "TestProd1",
-                            Price = 20.0m,
-                            ProductCategory = "games"
-                        },
-                        new
-                        {
-                            ProductId = 2,
-                            Name = "TestProd2",
-                            Price = 40.0m,
-                            ProductCategory = "games"
-                        },
-                        new
-                        {
-                            ProductId = 3,
-                            Name = "TestProd3",
-                            Price = 150.0m,
-                            ProductCategory = "technology"
-                        },
-                        new
-                        {
-                            ProductId = 4,
-                            Name = "TestProd4",
-                            Price = 60.0m,
-                            ProductCategory = "software"
-                        },
-                        new
-                        {
-                            ProductId = 5,
-                            Name = "TestProd5",
-                            Price = 45.0m,
-                            ProductCategory = "gadgets"
-                        },
-                        new
-                        {
-                            ProductId = 6,
-                            Name = "TestProd6",
-                            Price = 100.0m,
-                            ProductCategory = "hardware"
-                        });
+            modelBuilder.Entity("TinyCrm.CrmDbContext.Order", b =>
+                {
+                    b.HasOne("TinyCrm.Models.Customer", null)
+                        .WithMany("Orders")
+                        .HasForeignKey("CustomerId");
+                });
+
+            modelBuilder.Entity("TinyCrm.Models.OrderProduct", b =>
+                {
+                    b.HasOne("TinyCrm.CrmDbContext.Order", "Order")
+                        .WithMany("OrderProducts")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TinyCrm.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

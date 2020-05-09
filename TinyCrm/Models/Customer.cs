@@ -16,19 +16,19 @@ namespace TinyCrm.Models
             public string VatNumber { get; set; }
             public string Phone { get; set; }
             public decimal TotalGross { get; set; }
-            public DateTime Created { get; set; }
-            public DateTime Dob { get; set; }
-            public bool IsActive { get; set; }
-            //public List<Order> Orders { get; set; }
+            public DateTimeOffset Created { get; set; }
+            public bool IsActive { get; set; } = true;
+            public List<Order> Orders { get; set; }
 
-            /*public Customer(string vatNumber)
+            public Customer()
             {
-                  if (!IsValidVatNumber(vatNumber)) throw new Exception("Invalid VAT number");
+                  //if (!IsValidVatNumber(vatNumber)) throw new Exception("Invalid VAT number");
 
-                  VatNumber = vatNumber;
-                  Created = DateTime.Now;
+                  //VatNumber = vatNumber;
+                  //Created = DateTime.Now;
+                  Orders = new List<Order>();
             }
-
+            /*
             public void CalculateTotalGross()
             {
                   TotalGross = Orders.Sum(o => o.TotalAmount);
