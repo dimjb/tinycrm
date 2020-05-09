@@ -15,7 +15,7 @@ namespace TinyCrm
             {
                   var dbContext = new TinyCrmDbContext();
 
-                  /*var productsSeed = GetProductsFromCsv("C:\\data.txt");
+                  /*var productsSeed = GetProductsFromCsv("C:\\data.csv");
                   foreach (Product p in productsSeed)
                   {
                         dbContext.Add(p);
@@ -24,12 +24,11 @@ namespace TinyCrm
 
                   var customerOpts = new CustomerOptions
                   {
-                        FirstName = "cust2",
-                         CreatedFrom = new DateTime(2020,5,3),
-                         CreatedTo = new DateTime(2020,5,10)
+                        CreatedFrom = new DateTime(2020, 5, 1),
+                        CreatedTo = new DateTime(2020, 5, 3)
                   };
 
-                 // var customer = SearchCustomers(customerOpts, dbContext).SingleOrDefault();
+                  // var customer = SearchCustomers(customerOpts, dbContext).SingleOrDefault();
 
                   var customers = SearchCustomers(customerOpts, dbContext).ToList();
 
